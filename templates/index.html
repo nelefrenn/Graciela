@@ -1,0 +1,48 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Seguimiento de Mamá</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">📝 Cuidado de Mamá Graciela</h2>
+
+        <form method="post" action="/agregar" class="card p-3 mb-4 shadow-sm">
+            <div class="mb-3">
+                <label class="form-label">📅 Fecha</label>
+                <input type="date" name="fecha" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">📝 Asunto</label>
+                <input type="text" name="asunto" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">👤 Responsable</label>
+                <input type="text" name="responsable" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Agregar tarea</button>
+        </form>
+
+        <ul class="list-group">
+            {% for tarea in tareas %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ tarea.fecha }}</strong> - {{ tarea.asunto }} ({{ tarea.responsable }})
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/completar/{{ loop.index0 }}" class="btn btn-success btn-sm">✔️</a>
+                    <a href="https://wa.me/?text=Tarea: {{ tarea.asunto }}%20para%20{{ tarea.responsable }}%20el%20{{ tarea.fecha }}" 
+                       target="_blank" class="btn btn-outline-secondary btn-sm">📤</a>
+                </div>
+            </li>
+            {% else %}
+            <li class="list-group-item text-center">✅ No hay tareas pendientes.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
