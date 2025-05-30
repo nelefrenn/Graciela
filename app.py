@@ -1,50 +1,40 @@
 from flask import Flask, render_template, request, redirect
-import sqlite3
-import os
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
-DB_FILE = 'database.db'
 
-def conectar_db():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+# Autenticación con Google Sheets
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+CREDENTIALS_FILE = "credentials.json"  # este archivo debe estar en tu proyecto
+SPREADSHEET_NAME = "TareasMama"
 
-def crear_tabla_si_no_existe():
-    with conectar_db() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS tareas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha TEXT NOT NULL,
-                asunto TEXT NOT NULL,
-                responsable TEXT NOT NULL,
-                estado TEXT NOT NULL DEFAULT 'pendiente'
-            )
-        ''')
-        conn.commit()
+def conectar_hoja():
+    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, SCOPE)
+    client = gspread.authorize(creds)
+    sheet = client.open(SPREADSHEET_NAME).sheet1
+    return sheet
 
-def obtener_tareas_pendientes():
-    with conectar_db() as conn:
-        tareas = conn.execute("SELECT * FROM tareas WHERE estado = 'pendiente'").fetchall()
-    return tareas
+def leer_tareas_pendientes():
+    sheet = conectar_hoja()
+    tareas = sheet.get_all_records()
+    return [t for t in tareas if t.get("estado", "").lower() == "pendiente"]
 
 def agregar_tarea(fecha, asunto, responsable):
-    with conectar_db() as conn:
-        conn.execute('''
-            INSERT INTO tareas (fecha, asunto, responsable, estado)
-            VALUES (?, ?, ?, 'pendiente')
-        ''', (fecha, asunto, responsable))
-        conn.commit()
+    sheet = conectar_hoja()
+    sheet.append_row([fecha, asunto, responsable, "pendiente"])
 
-def marcar_como_terminada(id_tarea):
-    with conectar_db() as conn:
-        conn.execute("UPDATE tareas SET estado = 'terminada' WHERE id = ?", (id_tarea,))
-        conn.commit()
+def marcar_como_terminada(indice):
+    sheet = conectar_hoja()
+    tareas = sheet.get_all_records()
+    if 0 <= indice < len(tareas):
+        # +2 por el encabezado y 1-indexing de Google Sheets
+        row_number = indice + 2
+        sheet.update_cell(row_number, 4, "terminada")  # columna 4 = estado
 
 @app.route('/')
 def index():
-    crear_tabla_si_no_existe()
-    tareas = obtener_tareas_pendientes()
+    tareas = leer_tareas_pendientes()
     return render_template('index.html', tareas=tareas)
 
 @app.route('/agregar', methods=['POST'])
@@ -55,12 +45,10 @@ def agregar():
     agregar_tarea(fecha, asunto, responsable)
     return redirect('/')
 
-@app.route('/completar/<int:id_tarea>')
-def completar(id_tarea):
-    marcar_como_terminada(id_tarea)
+@app.route('/completar/<int:indice>')
+def completar(indice):
+    marcar_como_terminada(indice)
     return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
