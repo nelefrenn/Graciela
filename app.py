@@ -4,10 +4,17 @@ import os
 
 app = Flask(__name__)
 CSV_FILE = 'tareas.csv'
+FIELDNAMES = ['fecha', 'asunto', 'responsable', 'estado']
+
+def asegurar_csv_existe():
+    """Crea el archivo CSV con encabezado si no existe"""
+    if not os.path.exists(CSV_FILE):
+        with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+            writer.writeheader()
 
 def leer_tareas():
-    if not os.path.exists(CSV_FILE):
-        return []
+    asegurar_csv_existe()
     with open(CSV_FILE, newline='', encoding='utf-8') as f:
         tareas = list(csv.DictReader(f))
         return [t for t in tareas if t['estado'] == 'pendiente']
@@ -19,22 +26,22 @@ def escribir_tarea(fecha, asunto, responsable):
         'responsable': responsable,
         'estado': 'pendiente'
     }
-    existe = os.path.exists(CSV_FILE)
+    print("Registrando tarea:", nueva_tarea)  # depuración
+    asegurar_csv_existe()
     with open(CSV_FILE, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['fecha', 'asunto', 'responsable', 'estado'])
-        if not existe:
-            writer.writeheader()
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writerow(nueva_tarea)
 
 def marcar_como_terminada(indice):
-    if not os.path.exists(CSV_FILE):
-        return
+    asegurar_csv_existe()
     with open(CSV_FILE, newline='', encoding='utf-8') as f:
         tareas = list(csv.DictReader(f))
+
     if 0 <= indice < len(tareas):
         tareas[indice]['estado'] = 'terminada'
+
     with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['fecha', 'asunto', 'responsable', 'estado'])
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(tareas)
 
@@ -58,4 +65,5 @@ def completar(indice):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
