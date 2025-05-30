@@ -23,7 +23,7 @@
 
     <!-- Alerta cuando se está completando -->
     <div id="completando" class="alert alert-warning d-none" role="alert">
-      🕒 Marcando tarea como completada...
+      ⏳ Actualizando la tarea...
     </div>
 
     <!-- Formulario para agregar tarea -->
@@ -50,12 +50,14 @@
         <div>
           <strong>{{ tarea.fecha }}</strong> - {{ tarea.asunto }} ({{ tarea.responsable }})
         </div>
-        <div class="d-flex gap-2">
-          <form method="get" action="/completar/{{ loop.index0 }}" onsubmit="mostrarCompletando()">
-            <button type="submit" class="btn btn-success btn-sm">✅ Completar</button>
+        <div class="d-flex gap-2 align-items-center">
+          <form method="get" action="/completar/{{ loop.index0 }}" onsubmit="return confirmarYCompletar(this)">
+            <button type="submit" class="btn btn-outline-secondary btn-sm completar-btn">
+              🟩
+            </button>
           </form>
           <a href="https://wa.me/?text=Tarea: {{ tarea.asunto }}%20para%20{{ tarea.responsable }}%20el%20{{ tarea.fecha }}" 
-             target="_blank" class="btn btn-outline-secondary btn-sm">📤 Compartir por WhatsApp</a>
+             target="_blank" class="btn btn-outline-secondary btn-sm">📤 WhatsApp</a>
         </div>
       </li>
       {% else %}
@@ -94,4 +96,23 @@
     });
 
     // Mostrar mensaje de guardado
-    document.getElementById('formulario-tarea').addEventListe
+    document.getElementById('formulario-tarea').addEventListener('submit', function () {
+      document.getElementById('guardando').classList.remove('d-none');
+    });
+
+    // Confirmar y mostrar aviso al completar tarea
+    function confirmarYCompletar(formulario) {
+      const confirmar = confirm("🟡 ¿Estás seguro de que ya se completó la tarea?");
+      if (confirmar) {
+        const boton = formulario.querySelector('button');
+        boton.textContent = "✔ Completando...";
+        boton.classList.remove('btn-outline-secondary');
+        boton.classList.add('btn-success');
+        document.getElementById('completando').classList.remove('d-none');
+        return true;
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>
