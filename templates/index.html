@@ -7,8 +7,6 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-  <!-- PWA (opcional) -->
   <link rel="manifest" href="/static/manifest.json" />
   <meta name="theme-color" content="#0d6efd" />
   <link rel="icon" href="/static/icon-192.png" />
@@ -18,8 +16,13 @@
   <div class="container mt-4">
     <h2 class="text-center mb-4">📝 Cuidado de Mamá Graciela</h2>
 
+    <!-- Indicador de guardado -->
+    <div id="guardando" class="alert alert-info d-none" role="alert">
+      ⏳ Guardando tarea...
+    </div>
+
     <!-- Formulario para agregar tarea -->
-    <form method="post" action="/agregar" class="card p-3 mb-4 shadow-sm">
+    <form id="formulario-tarea" method="post" action="/agregar" class="card p-3 mb-4 shadow-sm">
       <div class="mb-3">
         <label class="form-label">📅 Fecha</label>
         <input type="date" name="fecha" class="form-control" required />
@@ -44,7 +47,7 @@
         </div>
         <div class="d-flex gap-2">
           <a href="/completar/{{ loop.index0 }}" class="btn btn-success btn-sm">✔️</a>
-          <a href="https://wa.me/?text=Tarea: {{ tarea.asunto }}%20para%20{{ tarea.responsable }}%20el%20{{ tarea.fecha }}" 
+          <a href="https://wa.me/?text=Tarea: {{ tarea.asunto }}%20para%20{{ tarea.responsable }}%20el%20{{ tarea.fecha }}"
              target="_blank" class="btn btn-outline-secondary btn-sm">📤</a>
         </div>
       </li>
@@ -82,6 +85,13 @@
       };
 
       document.querySelector('.container').appendChild(installBtn);
+    });
+  </script>
+
+  <!-- Mostrar mensaje “Guardando tarea...” -->
+  <script>
+    document.getElementById('formulario-tarea').addEventListener('submit', function () {
+      document.getElementById('guardando').classList.remove('d-none');
     });
   </script>
 </body>
